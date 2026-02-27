@@ -45,9 +45,9 @@ FILE_KEYWORDS_CSI1000 = ("上证1000", "行情")
 AUGMENTED_FACTOR_FILENAME = "因子_国家队_增强版_pair_zscore.xlsx"
 
 # 每个因子（标的列）做 rolling z-score 的窗口长度
-ROLLING_ZSCORE_WINDOW = 180
+ROLLING_ZSCORE_WINDOW = 90
 # 窗口内参与均值和标准差的只取有效值（非 0 且非空）；至少需要该个数的有效值才输出 z，保证因子一旦开始就连续
-ROLLING_ZSCORE_MIN_VALID_IN_WINDOW = 180
+ROLLING_ZSCORE_MIN_VALID_IN_WINDOW = 90
 
 # 相对因子：在同一因子(sheet)内按 (标的A, 标的B) 做差，形成 标的A - 标的B 的相对资金净流入类因子
 # 每项为 (code_a, code_b)，结果为 rolling_z(code_a) - rolling_z(code_b)
@@ -75,7 +75,7 @@ IMPLICATION_EXCEL_FILENAME = "数据_波动率与股债指数.xlsx"
 # -----------------------------------------------------------------------------
 # 时滞：因子早、大盘减小盘反应晚。回归 y(当日+lag) ~ factor(当日)，lag 取以下列表中的值（单位：交易日）
 # 如 [0,1,2,3] 表示当日因子预测当日/次日/2日后/3日后 的 y
-REGRESSION_LAG_DAYS = [1, 2, 3]
+REGRESSION_LAG_DAYS = [0, 1, 2, 3]
 # 单因子对 y 的回归：p 值低于此阈值视为显著
 REGRESSION_MAX_PVALUE = 0.05
 # 单因子与 y 的 |相关系数| 不低于此才考虑入选（可选，None 表示不按相关系数过滤）
@@ -85,7 +85,7 @@ REGRESSION_MIN_ABS_CORR = None
 # 融合筛选规则（04 用）：按 lag 与名字筛选后等权融合
 # -----------------------------------------------------------------------------
 # 参与融合的 lag：只保留回归结果中 lag 在此列表中的因子
-FUSION_LAG_ALLOWED = [1, 2, 3]
+FUSION_LAG_ALLOWED = [0, 1, 2, 3]
 # 参与融合的 sheet（因子类型）：None = 全部；否则为要保留的 sheet 名列表
 FUSION_SHEET_INCLUDE = None
 # 参与融合的标的对：None = 全部；否则为 标的对 列中需包含的字符串（满足任一即保留）
