@@ -41,8 +41,16 @@ FILE_KEYWORDS_CSI50 = ("上证50", "行情")
 # 文件名需同时包含这些关键词才视为「上证1000 行情」
 FILE_KEYWORDS_CSI1000 = ("上证1000", "行情")
 
+# 文件名需同时包含这些关键词才视为「沪深300 行情」（用于图表背景）
+FILE_KEYWORDS_CSI300 = ("沪深300", "行情")
+
 # 增强版国家队因子 Excel 文件名（Data 目录下）
 AUGMENTED_FACTOR_FILENAME = "因子_国家队_增强版_pair_zscore.xlsx"
+
+# 从因子流程中完全排除的 sheet（因子类型）名称列表
+# 在此添加即可让该因子在 factor_build / factor_test / 融合 等所有环节消失
+# 例：["ETF申购赎回现金差额", "turn"] 表示排除这两个因子
+EXCLUDE_SHEETS: list = ["ETF申购赎回现金差额", "amt", "volume", "amt_btin", "iopv"]
 
 # 每个因子（标的列）做 rolling z-score 的窗口长度
 ROLLING_ZSCORE_WINDOW = 90
@@ -73,9 +81,15 @@ IMPLICATION_EXCEL_FILENAME = "数据_波动率与股债指数.xlsx"
 # -----------------------------------------------------------------------------
 # 因子回归与筛选（03 用）
 # -----------------------------------------------------------------------------
-# 时滞：因子早、大盘减小盘反应晚。回归 y(当日+lag) ~ factor(当日)，lag 取以下列表中的值（单位：交易日）
-# 如 [0,1,2,3] 表示当日因子预测当日/次日/2日后/3日后 的 y
-REGRESSION_LAG_DAYS = [0, 1, 2, 3]
+# 时滞设置：按因子类型分开
+# 场内因子（T+0 与 y 同日生效）：只测 lag=0
+LAG_INTRADAY_SHEETS = ["pct_chg", "volume_btin", "turn", "NAV_iopv_discount"]
+LAG_INTRADAY_DAYS   = [0]
+# 场外因子（y T+0 先动，因子 T+2 才出现）：y 领先因子 1-3 天
+LAG_DELAYED_SHEETS  = ["netinflow", "unit_chg", "unit_total"]
+LAG_DELAYED_DAYS    = [-2]
+# 兜底：未在上述两组中的因子使用此列表
+REGRESSION_LAG_DAYS = [-3, -2, -1, 0]
 # 单因子对 y 的回归：p 值低于此阈值视为显著
 REGRESSION_MAX_PVALUE = 0.05
 # 单因子与 y 的 |相关系数| 不低于此才考虑入选（可选，None 表示不按相关系数过滤）
@@ -84,8 +98,8 @@ REGRESSION_MIN_ABS_CORR = None
 # -----------------------------------------------------------------------------
 # 融合筛选规则（04 用）：按 lag 与名字筛选后等权融合
 # -----------------------------------------------------------------------------
-# 参与融合的 lag：只保留回归结果中 lag 在此列表中的因子
-FUSION_LAG_ALLOWED = [0, 1, 2, 3]
+# 参与融合的 lag：覆盖所有可能出现的 lag 值
+FUSION_LAG_ALLOWED = [-3, -2, -1, 0]
 # 参与融合的 sheet（因子类型）：None = 全部；否则为要保留的 sheet 名列表
 FUSION_SHEET_INCLUDE = None
 # 参与融合的标的对：None = 全部；否则为 标的对 列中需包含的字符串（满足任一即保留）
@@ -106,13 +120,24 @@ MARK_DATES = [
     "2025-04-07",
 ]
 
+# 两会日期区间（政协开幕日 ~ 人大闭幕日），用于图中绘制浅蓝色阴影带
+LIANGHUI_PERIODS = [
+    ("2019-03-03", "2019-03-15"),
+    ("2020-05-21", "2020-05-28"),
+    ("2021-03-04", "2021-03-11"),
+    ("2022-03-04", "2022-03-11"),
+    ("2023-03-04", "2023-03-13"),
+    ("2024-03-04", "2024-03-11"),
+    ("2025-03-04", "2025-03-11"),
+]
+
 
 def get_base_dir():
     """解析项目根目录：优先用 config 中的 BASE_DIR，否则按 cwd 推断。"""
     if BASE_DIR is not None and os.path.isdir(BASE_DIR):
         return os.path.abspath(BASE_DIR)
     cwd = os.getcwd()
-    if os.path.basename(cwd) in ("factor_build", "factor_test", "factor_display"):
+    if os.path.basename(cwd) in ("factor_build", "factor_test", "factor_display", "factor_rational_app"):
         return os.path.dirname(cwd)
     return cwd
 
